@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Applications Directory | CareerTracker</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-800 flex flex-col justify-between">
+
+    <!-- Top Navigation Bar -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-10 shadow-sm">
+        <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <span class="text-2xl">💼</span>
+                <span class="font-bold text-lg text-slate-900 tracking-tight">Career<span class="text-indigo-600">Track</span></span>
+            </div>
+            <a href="index.html" class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-4 py-2 rounded-lg text-sm transition-colors shadow-sm">
+                <span>➕ Add New Application</span>
+            </a>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="max-w-6xl w-full mx-auto px-6 py-8 flex-grow">
+        
+        <!-- Header & Metrics -->
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+            <div>
+                <h1 class="text-2xl font-bold text-slate-900">Job Applications</h1>
+                <p class="text-sm text-slate-500 mt-0.5">Manage and update all active positions in your interview process.</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <div class="bg-white border border-slate-200 px-4 py-2 rounded-xl text-center shadow-xs">
+                    <span class="block text-[11px] font-semibold uppercase tracking-wider text-slate-400">Total</span>
+                    <span id="metricTotal" class="text-lg font-bold text-slate-800">0</span>
+                </div>
+                <div class="bg-white border border-slate-200 px-4 py-2 rounded-xl text-center shadow-xs">
+                    <span class="block text-[11px] font-semibold uppercase tracking-wider text-indigo-500">Active</span>
+                    <span id="metricActive" class="text-lg font-bold text-indigo-600">0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="bg-white p-3 rounded-xl border border-slate-200/80 shadow-xs mb-6 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-2">
+                <button onclick="filterStatus('ALL')" class="filter-tab px-3 py-1.5 text-xs font-semibold rounded-lg bg-indigo-50 text-indigo-700">All</button>
+                <button onclick="filterStatus('Applied')" class="filter-tab px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 hover:bg-slate-100">Applied</button>
+                <button onclick="filterStatus('Interviewing')" class="filter-tab px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 hover:bg-slate-100">Interviewing</button>
+                <button onclick="filterStatus('Offered')" class="filter-tab px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 hover:bg-slate-100">Offered</button>
+                <button onclick="filterStatus('Rejected')" class="filter-tab px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 hover:bg-slate-100">Rejected</button>
+            </div>
+            <div class="text-xs text-slate-400">
+                Click status dropdown to update instantly
+            </div>
+        </div>
+
+        <!-- Table Container -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50/75 border-b border-slate-200 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                            <th class="py-3.5 px-5">Company & Role</th>
+                            <th class="py-3.5 px-5">Status</th>
+                            <th class="py-3.5 px-5">Applied Date</th>
+                            <th class="py-3.5 px-5">Posting Link</th>
+                            <th class="py-3.5 px-5">Notes</th>
+                            <th class="py-3.5 px-5 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="jobsTableBody" class="divide-y divide-slate-100 text-sm">
+                        <tr>
+                            <td colspan="6" class="py-12 text-center text-slate-400 text-sm">Loading applications...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <footer class="py-6 text-center text-xs text-slate-400">
+        CareerTrack App &bull; Powered by FastAPI & PostgreSQL
+    </footer>
+
+    <!-- Script to Manage Applications Directory Table -->
+    <script>
+        const API_URL = "http://localhost:8000/jobs";
+        let allJobs = [];
+        let currentFilter = 'ALL';
+
+        document.addEventListener('DOMContentLoaded', fetchJobs);
+
+        async function fetchJobs() {
+            try {
+                const res = await fetch(API_URL);
+                allJobs = await res.json();
+                updateMetrics();
+                renderTable();
+            } catch (err) {
+                console.error("Fetch failed:", err);
+                document.getElementById('jobsTableBody').innerHTML = `
+                    <tr>
+                        <td colspan="6" class="py-12 text-center text-rose-500 font-medium">
+                            Failed to connect to backend server. Ensure 'uvicorn' is actively running on port 8000.
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        function updateMetrics() {
+            document.getElementById('metricTotal').innerText = allJobs.length;
+            const active = allJobs.filter(j => j.status === 'Applied' || j.status === 'Interviewing').length;
+            document.getElementById('metricActive').innerText = active;
+        }
+
+        function filterStatus(status) {
+            currentFilter = status;
+            document.querySelectorAll('.filter-tab').forEach(el => {
+                if (el.innerText.toUpperCase().includes(status.toUpperCase())) {
+                    el.className = "filter-tab px-3 py-1.5 text-xs font-semibold rounded-lg bg-indigo-50 text-indigo-700";
+                } else {
+                    el.className = "filter-tab px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 hover:bg-slate-100";
+                }
+            });
+            renderTable();
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('jobsTableBody');
+            const filtered = currentFilter === 'ALL' 
+                ? allJobs 
+                : allJobs.filter(j => j.status === currentFilter);
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="py-12 text-center text-slate-400">
+                            No job applications found in this category.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(job => {
+                return `
+                    <tr class="hover:bg-slate-50/60 transition-colors">
+                        <td class="py-4 px-5">
+                            <div class="font-semibold text-slate-900">${job.company_name}</div>
+                            <div class="text-xs text-slate-500 mt-0.5">${job.job_title}</div>
+                        </td>
+                        <td class="py-4 px-5">
+                            <select onchange="updateJobStatus(${job.id}, this.value)" class="text-xs font-medium px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                                <option value="Applied" ${job.status === 'Applied' ? 'selected' : ''}>📩 Applied</option>
+                                <option value="Interviewing" ${job.status === 'Interviewing' ? 'selected' : ''}>🗓️ Interviewing</option>
+                                <option value="Offered" ${job.status === 'Offered' ? 'selected' : ''}>🎉 Offered</option>
+                                <option value="Rejected" ${job.status === 'Rejected' ? 'selected' : ''}>❌ Rejected</option>
+                            </select>
+                        </td>
+                        <td class="py-4 px-5 text-slate-600 text-xs">
+                            ${job.application_date ? job.application_date : '<span class="text-slate-300">N/A</span>'}
+                        </td>
+                        <td class="py-4 px-5">
+                            ${job.job_url ? `
+                                <a href="${job.job_url}" target="_blank" class="inline-flex items-center gap-1 text-xs text-indigo-600 hover:underline">
+                                    <span>Link</span>
+                                    <span>↗</span>
+                                </a>` : '<span class="text-slate-300 text-xs">—</span>'}
+                        </td>
+                        <td class="py-4 px-5 text-xs text-slate-500 max-w-xs truncate" title="${job.notes || ''}">
+                            ${job.notes ? job.notes : '<span class="text-slate-300">—</span>'}
+                        </td>
+                        <td class="py-4 px-5 text-right">
+                            <button onclick="deleteJob(${job.id})" class="text-xs font-medium text-slate-400 hover:text-rose-600 hover:bg-rose-50 px-2.5 py-1.5 rounded-md transition-colors">
+                                Delete
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        async function updateJobStatus(jobId, newStatus) {
+            try {
+                const res = await fetch(`${API_URL}/${jobId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ company_name: "temp", job_title: "temp", status: newStatus })
+                });
+                if (res.ok) {
+                    const idx = allJobs.findIndex(j => j.id === jobId);
+                    if (idx !== -1) allJobs[idx].status = newStatus;
+                    updateMetrics();
+                    renderTable();
+                }
+            } catch (err) {
+                console.error("Status update failed:", err);
+            }
+        }
+
+        async function deleteJob(jobId) {
+            if (!confirm("Are you sure you want to delete this application?")) return;
+
+            try {
+                const res = await fetch(`${API_URL}/${jobId}`, { method: 'DELETE' });
+                if (res.ok) {
+                    allJobs = allJobs.filter(j => j.id !== jobId);
+                    updateMetrics();
+                    renderTable();
+                }
+            } catch (err) {
+                console.error("Delete failed:", err);
+            }
+        }
+    </script>
+</body>
+</html>

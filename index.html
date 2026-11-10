@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Job Application | CareerTracker</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-800 flex flex-col justify-between">
+
+    <!-- Top Navigation Bar -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-10 shadow-sm">
+        <div class="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <span class="text-2xl">💼</span>
+                <span class="font-bold text-lg text-slate-900 tracking-tight">Career<span class="text-indigo-600">Track</span></span>
+            </div>
+            <a href="dashboard.html" class="inline-flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-indigo-600 px-4 py-2 rounded-lg hover:bg-slate-100 transition-colors">
+                <span>View All Applications</span>
+                <span>→</span>
+            </a>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="max-w-2xl w-full mx-auto px-6 py-10 flex-grow">
+        
+        <!-- Status Message Banner -->
+        <div id="alertBanner" class="hidden mb-6 p-4 rounded-xl text-sm font-medium transition-all"></div>
+
+        <!-- Form Card -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-8">
+            <div class="border-b border-slate-100 pb-5 mb-6">
+                <h1 class="text-xl font-bold text-slate-900">New Job Application</h1>
+                <p class="text-sm text-slate-500 mt-1">Keep track of your interview pipeline by logging position details.</p>
+            </div>
+
+            <form id="jobForm" class="space-y-5">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">Company Name *</label>
+                        <input type="text" id="companyName" required minlength="2" placeholder="e.g. Google, Stripe" class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">Job Title *</label>
+                        <input type="text" id="jobTitle" required minlength="2" placeholder="e.g. Software Engineer" class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">Current Status</label>
+                        <select id="status" class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition">
+                            <option value="Applied">📩 Applied</option>
+                            <option value="Interviewing">🗓️ Interviewing</option>
+                            <option value="Offered">🎉 Offered</option>
+                            <option value="Rejected">❌ Rejected</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">Date Applied</label>
+                        <input type="date" id="appDate" class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">Job Posting URL</label>
+                    <input type="url" id="jobUrl" placeholder="https://linkedin.com/jobs/..." class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">Notes & Salary Details</label>
+                    <textarea id="notes" rows="3" placeholder="Key contact person, recruiter notes, salary range..." class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition"></textarea>
+                </div>
+
+                <div class="pt-3 flex items-center justify-between gap-4">
+                    <a href="dashboard.html" class="text-sm font-medium text-slate-500 hover:text-slate-800">Cancel</a>
+                    <button type="submit" id="submitBtn" class="inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-medium px-6 py-2.5 rounded-lg shadow-sm hover:shadow transition-all text-sm">
+                        <span>Add to Tracker</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <footer class="py-6 text-center text-xs text-slate-400">
+        CareerTrack App &bull; Powered by FastAPI & PostgreSQL
+    </footer>
+
+    <!-- Form Handler with Strict Validation -->
+    <script>
+        const API_URL = "http://localhost:8000/jobs";
+        const form = document.getElementById('jobForm');
+        const alertBanner = document.getElementById('alertBanner');
+        const submitBtn = document.getElementById('submitBtn');
+
+        // Set default date to today
+        document.getElementById('appDate').value = new Date().toISOString().split('T')[0];
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const company = document.getElementById('companyName').value.trim();
+            const title = document.getElementById('jobTitle').value.trim();
+
+            // 1. Company Name validation: must contain letters, cannot be only digits
+            if (/^\d+$/.test(company) || !/[a-zA-Z]/.test(company)) {
+                showAlert("error", "Company name cannot consist only of numbers. It must contain letters.");
+                return;
+            }
+
+            // 2. Job Title validation: STRICTLY NO NUMBERS AT ALL
+            if (/\d/.test(title)) {
+                showAlert("error", "Job title cannot contain any numbers. Letters and punctuation only.");
+                return;
+            }
+
+            if (!/[a-zA-Z]/.test(title)) {
+                showAlert("error", "Job title must contain valid letters.");
+                return;
+            }
+            
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = "Saving...";
+
+            const payload = {
+                company_name: company,
+                job_title: title,
+                status: document.getElementById('status').value,
+                application_date: document.getElementById('appDate').value || null,
+                job_url: document.getElementById('jobUrl').value.trim() || null,
+                notes: document.getElementById('notes').value.trim() || null
+            };
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.ok) {
+                    showAlert("success", "Application added successfully! Redirecting to tracker...");
+                    form.reset();
+                    setTimeout(() => {
+                        window.location.href = "dashboard.html";
+                    }, 1200);
+                } else {
+                    const errorData = await response.json().catch(() => ({}));
+                    let errorMsg = "Validation failed.";
+                    if (Array.isArray(errorData.detail)) {
+                        errorMsg = errorData.detail.map(d => d.msg.replace("Value error, ", "")).join(" | ");
+                    } else if (typeof errorData.detail === 'string') {
+                        errorMsg = errorData.detail;
+                    }
+                    showAlert("error", errorMsg);
+                }
+            } catch (err) {
+                console.error("Fetch error:", err);
+                showAlert("error", "Cannot connect to server. Ensure uvicorn is running.");
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = "Add to Tracker";
+            }
+        });
+
+        function showAlert(type, message) {
+            alertBanner.classList.remove('hidden', 'bg-emerald-50', 'text-emerald-800', 'border-emerald-200', 'bg-rose-50', 'text-rose-800', 'border-rose-200');
+            if (type === 'success') {
+                alertBanner.classList.add('bg-emerald-50', 'text-emerald-800', 'border', 'border-emerald-200');
+            } else {
+                alertBanner.classList.add('bg-rose-50', 'text-rose-800', 'border', 'border-rose-200');
+            }
+            alertBanner.innerText = message;
+            alertBanner.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        }
+    </script>
+</body>
+</html>
